@@ -58,6 +58,12 @@ function rekeningSluiten() {
     window.history.go(0);
 }
 
+function toonWaarschuwing(msg) {
+    var eWarning = document.querySelector('.waarschuwing');
+    eWarning.innerHTML = msg;
+    eWarning.style.display = "block";
+}
+
 function berekenen(bewerking) {
     var nNieuwSaldo = 0;
     var eBedrag = document.getElementById('bedrag');
@@ -78,9 +84,19 @@ function berekenen(bewerking) {
                 nNieuwSaldo = nSaldo - nBedrag;
                 break;
             }
-            setCookie('saldo', nNieuwSaldo, 100);
-            window.history.go(0);
-            eBedrag.value = "";
+            if (nNieuwSaldo <= 0) {
+                var nMax = nSaldo - 1;
+                sBericht += "Uw saldo is onvoldoende om dit bedrag af te halen. ";
+                sBericht += "U kunt maximaal " + nMax + " Euro afhalen.";
+                eBedrag.value = nMax;
+                eBedrag.focus();
+                toonWaarschuwing(sBericht);
+            } else {
+                setCookie('saldo', nNieuwSaldo, 100);
+                window.history.go(0);
+                eBedrag.value = "";
+            }
+            
         } else {
             alert("U moet een correct bedrag ingeven!");
         }
