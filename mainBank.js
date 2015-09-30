@@ -43,18 +43,27 @@ function maakKnop(tekst) {
 }
 
 function rekeningOpenen() {
-    console.log("rekening geopend");
     var sNaam = window.prompt("Uw naam, graag?", "");
-    if (sNaam!="" && sNaam != null) {
-        setCookie('klantnaam', sNaam, 100);
-        setCookie('saldo', 100, 100);
+
+    if (sNaam != "" && sNaam != null) {
+        if (localStorage) {
+            localStorage.setItem('klantnaam', sNaam);
+            localStorage.setItem('saldo', 100);
+        } else {
+            setCookie('klantnaam', sNaam, 100);
+            setCookie('saldo', 100, 100);
+        }
         window.history.go(0);
     }
 }
 
 function rekeningSluiten() {
-    clearCookie('klantnaam');
-    clearCookie('saldo');
+    if (localStorage) {
+        localStorage.clear();
+    } else {
+        clearCookie('klantnaam');
+        clearCookie('saldo');
+    }
     window.history.go(0);
 }
 
@@ -68,7 +77,11 @@ function berekenen(bewerking) {
     var nNieuwSaldo = 0;
     var eBedrag = document.getElementById('bedrag');
     var sBedrag = eBedrag.value;
-    var sSaldo = getCookie('saldo');
+    if (localStorage) {
+        var sSaldo = localStorage.getItem('saldo');
+    } else {
+        var sSaldo = getCookie('saldo');
+    }
     var sBericht = "";
 
     if (sSaldo != null && sSaldo != "") {
@@ -92,7 +105,11 @@ function berekenen(bewerking) {
                 eBedrag.focus();
                 toonWaarschuwing(sBericht);
             } else {
-                setCookie('saldo', nNieuwSaldo, 100);
+                if (localStorage) {
+                    localStorage.setItem('saldo', nNieuwSaldo);
+                } else {
+                    setCookie('saldo', nNieuwSaldo, 100);
+                }
                 window.history.go(0);
                 eBedrag.value = "";
             }
@@ -117,21 +134,40 @@ window.onload = function () {
     var sNaam = 'nieuwe klant';
     var nSaldo = 0;
 
-    if (getCookie('klantnaam')) {
+    if (localStorage) {
+        if (localStorage.klantnaam) {
 
-        var sNaam = getCookie('klantnaam');
-        var nSaldo = getCookie('saldo');
+            var sNaam = localStorage.klantnaam;
+            var nSaldo = parseFloat(localStorage.saldo).toFixed(2);
 
-        sMsg += "Welkom " + sNaam + ",";
-        sMsg += "uw saldo bedraagt " + nSaldo + " Euro";
-        var eKnop = maakKnop('Sluit rekening');
-        eKnop.addEventListener('click', rekeningSluiten);
+            sMsg += "Welkom " + sNaam + ",";
+            sMsg += "uw saldo bedraagt " + nSaldo + " Euro";
+            var eKnop = maakKnop('Sluit rekening');
+            eKnop.addEventListener('click', rekeningSluiten);
+        } else {
+            sMsg += "Welkom beste bezoeker. ";
+            sMsg += "Als u bij ons een nieuwe rekening opent, ontvangt u een startsaldo van 100 Euro!";
+
+            var eKnop = maakKnop('Open rekening');
+            eKnop.addEventListener('click', rekeningOpenen);
+        }
     } else {
-        sMsg += "Welkom beste bezoeker. ";
-        sMsg += "Als u bij ons een nieuwe rekening opent, ontvangt u een startsaldo van 100 Euro!";
+        if (getCookie('klantnaam')) {
 
-        var eKnop = maakKnop('Open rekening');
-        eKnop.addEventListener('click', rekeningOpenen);
+            var sNaam = getCookie('klantnaam');
+            var nSaldo = getCookie('saldo');
+
+            sMsg += "Welkom " + sNaam + ",";
+            sMsg += "uw saldo bedraagt " + nSaldo + " Euro";
+            var eKnop = maakKnop('Sluit rekening');
+            eKnop.addEventListener('click', rekeningSluiten);
+        } else {
+            sMsg += "Welkom beste bezoeker. ";
+            sMsg += "Als u bij ons een nieuwe rekening opent, ontvangt u een startsaldo van 100 Euro!";
+
+            var eKnop = maakKnop('Open rekening');
+            eKnop.addEventListener('click', rekeningOpenen);
+        }
     }
 
     eKnopKrediet.addEventListener('click', function () { berekenen('+') });
